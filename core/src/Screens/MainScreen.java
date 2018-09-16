@@ -112,7 +112,7 @@ public class MainScreen implements Screen {
             @Override
             public void clicked (InputEvent event, float x, float y) {
                 game.dlgHelp.show(stage, null); //TODO: повторно не то показывает или медленно показывается
-               // game.dlgHelp.setPosition(Math.round((stage.getWidth() - game.dlgHelp.getWidth()) / 2), Math.round((stage.getHeight() - game.dlgHelp.getHeight()) / 2));
+                game.dlgHelp.setPosition(Math.round((stage.getWidth() - game.dlgHelp.getWidth()) / 2), Math.round((stage.getHeight() - game.dlgHelp.getHeight()) / 2));
             };
         };
         AddButton(str1, btStBlue, clHelp);
