@@ -1,0 +1,344 @@
+#ifdef GL_ES
+    precision mediump float;
+#endif
+
+varying vec4 v_color;
+varying vec2 v_texCoords;
+uniform mat4 u_projTrans;
+//uniform sampler2D u_texture;
+
+uniform float d1;
+uniform float d2;
+uniform float smoothing; //0.03;
+uniform float radius;
+uniform int neighbors0;
+uniform int neighbors1;
+uniform int neighbors2;
+uniform int neighbors3;
+uniform int neighbors4;
+uniform int neighbors5;
+
+int neighbors[6];
+float pii = 3.14159265;
+float blackout = 0.8;
+float r2 = 1.333 * d2;
+float dd = d2 - d1;
+//float alfa = acos(2.1213 * d1 * 0.5 / r2) - 0.5236*0; //... - 30 гр
+float alfa = 0.651;
+float alfa2 = 0.1274;//0.651 - 0.5236;
+float cos_alfa = 0.7956;//cos(alfa); // 0.7956
+float cos_alfa2 = 0.9919;//cos(alfa2); // 0.9919
+float sin_alfa = 0.6060;//sin(alfa); // 0.6060
+float sin_alfa2 = 0.1271;//sin(alfa2); // 0.1271
+
+vec2 vert[6];
+vec2 vert2[6];
+vec2 vert3[6];
+vec2 vert3s[6];
+vec2 vertR[6];
+vec2 vertR2[6];
+vec2 vv = vec2(0.5, 0.5);
+
+float my_smoothstep(float a_min, float a_max, float dist)
+{
+    return (min(dist, a_max) - a_min) / (a_max - a_min);
+}
+
+bool is_in_tr(vec2 aB, vec2 aC)
+{
+  vec2 B, C, P;
+  float m, l;
+  B = aB - vv;
+  C = aC - vv;
+  P = v_texCoords - vv;
+  m = (P.x*B.y - B.x*P.y) / (C.x*B.y - B.x*C.y);
+  if ((m >= 0.0) && (m <= 1.0)) {
+    l = (P.x - m*C.x) / B.x;
+    if ((l >= 0.0) && ((m + l) <= 1.0))
+      return true;
+  }
+
+  return false;
+}
+
+float dist_to_line ( vec2 vert, vec2 b)
+{
+    float dist = distance(vert, b);
+//    float t = dot(v_texCoords - vert, b - vert) / pow (dist, 2.0);
+    float t = dot(v_texCoords - vert, b - vert) / dist / dist;
+    float d = distance(vert + t * (b - vert), v_texCoords);
+    d = mix(d, distance(vert, v_texCoords), step(t, 0.0));
+    d = mix(d, distance(b, v_texCoords), step(1.0, t));
+    return abs(d);
+}
+
+float dist_to_line ( vec2 vert, vec2 b, vec2 x)
+{
+    float dist = distance(vert, b);
+    //float t = dot (x - vert, b - vert ) / pow (dist, 2.0 );
+    float t = dot (x - vert, b - vert ) / dist / dist;
+    float d = distance(vert + t * (b - vert), x);
+    d = mix(d, distance (vert, x), step (t, 0.0));
+    d = mix(d, distance (b, x), step (1.0, t));
+    return abs(d);
+}
+
+void draw_line(vec2 vert, vec2 b)
+{
+   float u_Width = 0.1;
+   float u_Border = 1.0;
+    float d = dist_to_line(vert, b);
+    float q = clamp(u_Width - d, 0.0, u_Border) / u_Border;
+    gl_FragColor.a = d;
+    gl_FragColor = vec4(d, d, d, 1.0);
+}
+
+void main ( )
+{
+    float dist;
+    float dist2;
+    neighbors[0] = neighbors0;
+    neighbors[1] = neighbors1;
+    neighbors[2] = neighbors2;
+    neighbors[3] = neighbors3;
+    neighbors[4] = neighbors4;
+    neighbors[5] = neighbors5;
+
+    vert[0] = vec2(0.0, 0.5);
+    vert[1] = vec2(0.25, 0.933);
+    vert[2] = vec2(0.75, 0.933);
+    vert[3] = vec2(1.0, 0.5);
+    vert[4] = vec2(0.75, 0.067);
+    vert[5] = vec2(0.25, 0.067);
+
+    float d11 = d2/2;
+    float r = 0.5 - d11;
+    vert2[0] = vec2(d11, 0.5);
+    vert2[1] = vec2(0.5 - r*0.5, 0.5 + 0.866*r);
+    vert2[2] = vec2(0.5 + r*0.5, 0.5 + 0.866*r);
+    vert2[3] = vec2(1.0 - d11, 0.5);
+    vert2[4] = vec2(0.5 + r*0.5, 0.5 - 0.866*r);
+    vert2[5] = vec2(0.5 - r*0.5, 0.5 - 0.866*r);
+
+    r = 0.5 - d2;
+    vert3[0] = vec2(d2, 0.5);
+    vert3[1] = vec2(0.5 - r*0.5, 0.5 + 0.866*r);
+    vert3[2] = vec2(0.5 + r*0.5, 0.5 + 0.866*r);
+    vert3[3] = vec2(1.0 - d2, 0.5);
+    vert3[4] = vec2(0.5 + r*0.5, 0.5 - 0.866*r);
+    vert3[5] = vec2(0.5 - r*0.5, 0.5 - 0.866*r);
+
+    r = 0.5 - d2 - smoothing;
+    vert3s[0] = vec2(d2 + smoothing, 0.5);
+    vert3s[1] = vec2(0.5 - r*0.5, 0.5 + 0.866*r);
+    vert3s[2] = vec2(0.5 + r*0.5, 0.5 + 0.866*r);
+    vert3s[3] = vec2(1.0 - d2 - smoothing, 0.5);
+    vert3s[4] = vec2(0.5 + r*0.5, 0.5 - 0.866*r);
+    vert3s[5] = vec2(0.5 - r*0.5, 0.5 - 0.866*r);
+
+    float d3 = radius / 0.866;
+    float l = d3 * 0.5;
+    r = 0.5 - d3;
+    vertR[0] = vec2(d3, 0.5);
+    vertR[1] = vec2(0.5 - r*0.5, 0.5 + 0.866*r);
+    vertR[2] = vec2(0.5 + r*0.5, 0.5 + 0.866*r);
+    vertR[3] = vec2(1.0 - d3, 0.5);
+    vertR[4] = vec2(0.5 + r*0.5, 0.5 - 0.866*r);
+    vertR[5] = vec2(0.5 - r*0.5, 0.5 - 0.866*r);
+
+    d3 = radius / 0.866;
+    float l2 = d3 * 0.5;
+    r = 0.5 - d3;
+    vertR2[0] = vec2(d3, 0.5);
+    vertR2[1] = vec2(0.5 - r*0.5, 0.5 + 0.866*r);
+    vertR2[2] = vec2(0.5 + r*0.5, 0.5 + 0.866*r);
+    vertR2[3] = vec2(1.0 - d3, 0.5);
+    vertR2[4] = vec2(0.5 + r*0.5, 0.5 - 0.866*r);
+    vertR2[5] = vec2(0.5 - r*0.5, 0.5 - 0.866*r);
+
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+    bool end = false;
+    for(int i = 0; i < 6 && !end; i++) {
+        int j = i + 1;
+        if(j > 5)
+            j = 0;
+
+        bool in_big_triangle = is_in_tr(vert[i], vert[j]);
+        bool in_big_triangle2 = is_in_tr(vert3[i], vert3[j]);
+
+        //если есть соседи
+        int jj = i - 1;
+        if(jj < 0)
+            jj = 5;
+        int jjj = i + 2;
+        if(jjj > 5)
+            jjj = jjj - 5;
+
+        vec2 centr;
+        float mult = 1.0;
+
+        if(in_big_triangle && (neighbors[i] == 1)) {
+            if(neighbors[j] == 0) {
+                if(i == 0) {
+                    centr.x = vert3[j].x + r2 * sin_alfa2;
+                    centr.y = vert3[j].y + r2 * cos_alfa2;
+                } else
+                if(i == 1) {
+                    centr.x = vert3[j].x + r2*0.866;
+                    centr.y = vert3[j].y + r2 * 0.5;
+                } else
+                if(i == 4) {
+                    centr.x = vert3[j].x - r2*0.866;
+                    centr.y = vert3[j].y - r2 * 0.5;
+                } else
+                if(i == 2) {
+                    centr.x = vert3[j].x + r2 * cos_alfa;
+                    centr.y = vert3[j].y - r2 * sin_alfa;
+                } else
+                if(i == 3) {
+                    centr.x = vert3[j].x - r2 * sin_alfa2;
+                    centr.y = vert3[j].y - r2 * cos_alfa2;
+                } else
+                //if(i == 5) {
+                {
+                    centr.x = vert3[j].x - r2 * cos_alfa;
+                    centr.y = vert3[j].y + r2 * sin_alfa;
+                }
+
+                dist = distance(v_texCoords, centr);
+
+                mult =
+                    //step(d11, dist_to_line(vert2[i], vert2[jj]))
+                    smoothstep(d11-smoothing, d11, dist_to_line(vert2[i], vert2[jj]))
+                    ;
+                 end = true;
+            }
+
+            if(neighbors[jj] == 0) {
+                if(i == 0) {
+                    centr.x = vert3[i].x - r2 * cos_alfa;
+                    centr.y = vert3[i].y - r2 * sin_alfa;
+                } else
+                if(i == 1) {
+                    centr.x = vert3[i].x - r2*0.866;
+                    centr.y = vert3[i].y + r2 * 0.5;
+                } else
+                if(i == 4) {
+                    centr.x = vert3[i].x + r2*0.866;
+                    centr.y = vert3[i].y - r2 * 0.5;
+                } else
+                if(i == 2) {
+                    centr.x = vert3[i].x - r2 * sin_alfa2;
+                    centr.y = vert3[i].y + r2 * cos_alfa2;
+                } else
+                if(i == 3) {
+                    centr.x = vert3[i].x + r2 * cos_alfa;
+                    centr.y = vert3[i].y + r2 * sin_alfa;
+                } else
+                //if(i == 5) {
+                {
+                    centr.x = vert3[i].x + r2 * sin_alfa2;
+                    centr.y = vert3[i].y - r2 * cos_alfa2;
+                }
+
+                dist = distance(v_texCoords, centr);
+                mult *=
+                    //smoothstep(r2-smoothing, r2, dist)
+                    //- smoothstep(r2, r2 + smoothing, dist)
+                    //smoothstep(r2*2.0, r2*3.0, dist);
+                    smoothstep(d11-smoothing, d11, dist_to_line(vert2[j], vert2[jjj]));
+                    //step(r2, dist);
+                end = true;
+            }
+
+            gl_FragColor = v_color * (1.7-mult);
+            if(end) {
+                break;
+            }
+        }
+
+        if(is_in_tr(vert3[i], vert3[j])) { // внутренняя область
+            //dist = distance(vertR2[i], v_texCoords);
+            //if((distance(vert3[i], v_texCoords) < l) && (dist > radius)) {
+            //   gl_FragColor = v_color * (1.0-smoothstep(radius-smoothing, radius, dist));
+            //   break;
+            //}
+            //dist = distance(vertR2[j], v_texCoords);
+            //if((distance(vert3[j], v_texCoords) < l) && (dist > radius)) {
+            //   gl_FragColor = v_color * (1.0-smoothstep(radius-smoothing, radius, dist));
+            //   break;
+            //}
+
+            float aaa;
+            //float cond = step(0.9, neighbors[i]);
+            //dist = cond * dist_to_line(vert3[i], vert3[j]);
+            //aaa = cond * (1.0-step(smoothing, dist));
+            dist = dist_to_line(vert3[i], vert3[j]);
+            if(neighbors[i] == 1) {
+                aaa = 0.0;
+            } else {
+                aaa = 1.0-step(smoothing, dist);
+            }
+            gl_FragColor =
+                v_color *
+                    (
+                     (aaa * smoothstep(0.0, smoothing, dist)) + // антиалиасинг
+                     ( (1.0-aaa) * (distance(vv, v_texCoords)
+                       * (1.0 - blackout) / dist_to_line(vert3[i], vert3[j], vv)
+                       + blackout))
+                    );
+            gl_FragColor = v_color * 0.7 * step(0.0, dist);
+            end = true;
+            break;
+        }
+
+        //if(is_in_tr(vert2[i], vert2[j])) { // прозрачная область
+        //    if(neighbors[i] == 1) {
+        //        gl_FragColor = v_color;
+        //        end = true;
+        //        break;
+        //    }
+        //    gl_FragColor = v_color*(1.0-smoothstep(0.0, smoothing, dist_to_line(vert2[i], vert2[j])));
+        //    end = true;
+        //    break;
+        //}
+
+        if(in_big_triangle) { // внешний ободок
+            dist = distance(vertR[i], v_texCoords);
+            if(neighbors[i] == 1) {
+                if((distance(vert[i], v_texCoords) < l) && (dist > radius)) {
+                   gl_FragColor = v_color * (1.0-smoothstep(radius-smoothing, radius, dist));
+
+                   end = true;
+                   break;
+                }
+                //dist = distance(vertR[j], v_texCoords);
+                //if((distance(vert[j], v_texCoords) < l) && (dist > radius)) {
+                //   gl_FragColor = v_color * (1.0-smoothstep(radius-smoothing, radius, dist));
+                //   end = true;
+                //   break;
+                //}
+                gl_FragColor = v_color * 0.7 * smoothstep(0.0, smoothing*0.01, dist_to_line(vert3[i], vert3[j]));
+                end = true;
+                break;
+            }
+
+            //if((distance(vert[i], v_texCoords) < l) && (dist > radius)) {
+            //   gl_FragColor = v_color * (1.0-smoothstep(radius-smoothing, radius, dist));
+            //   end = true;
+            //   break;
+            //}
+            //dist = distance(vertR[j], v_texCoords);
+            //if((distance(vert[j], v_texCoords) < l) && (dist > radius)) {
+            //   gl_FragColor = v_color * (1.0-smoothstep(radius-smoothing, radius, dist));
+            //   end = true;
+            //   break;
+            //}
+            gl_FragColor = v_color
+                * min(1.0, 1.0 - 0.5*smoothstep(d11-smoothing, d11, dist_to_line(vert2[i], vert2[j])));
+            end = true;
+            break;
+        }
+    }
+
+}

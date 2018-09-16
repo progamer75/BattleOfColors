@@ -1,0 +1,209 @@
+//#ifdef GL_ES
+    precision mediump float;
+//#endif
+
+varying vec4 v_color;
+varying vec2 v_texCoords;
+uniform mat4 u_projTrans;
+
+uniform float d1;
+uniform float d2;
+uniform float smoothing;
+uniform float radius;
+uniform int neighbors0;
+uniform int neighbors1;
+uniform int neighbors2;
+uniform int neighbors3;
+uniform int neighbors4;
+uniform int neighbors5;
+
+int neighbors[6];
+float pii = 3.14159265;
+float alpha = 1.0;
+
+vec2 vert[6];
+vec2 vertR[6];
+vec2 vertRd[12];
+vec2 vv = vec2(0.5, 0.5);
+
+bool is_in_tr(vec2 A, vec2 B, vec2 C)
+//vershini protiv chasovoi strelke
+{
+    if((v_texCoords.x - A.x) * (A.y - B.y) - (v_texCoords.y - A.y) * (A.x - B.x) < 0.0001)
+        if ((v_texCoords.x - B.x) * (B.y - C.y) - (v_texCoords.y - B.y) * (B.x - C.x) < 0.0001)
+            if ((v_texCoords.x - C.x) * (C.y - A.y) - (v_texCoords.y - C.y) * (C.x - A.x) < 0.0001)
+                return true;
+    return false;
+}
+
+float dist_to_line( vec2 vert, vec2 b)
+{
+    float dist = distance(vert, b);
+//    float t = dot(v_texCoords - vert, b - vert) / pow (dist, 2.0);
+    float t = dot(v_texCoords - vert, b - vert) / dist / dist;
+    float d = distance(vert + t * (b - vert), v_texCoords);
+    d = mix(d, distance(vert, v_texCoords), step(t, 0.0));
+    d = mix(d, distance(b, v_texCoords), step(1.0, t));
+    return abs(d);
+}
+
+void main ( )
+{
+    float r_d = radius + d2 + 0.1;
+    float dist;
+    float dist2;
+    float cos60 = 0.5;
+    float sin60 = 0.866025;
+    float ddist1 = 0.3;
+    float ddist2 = 0.44;
+
+    neighbors[0] = neighbors0;
+    neighbors[1] = neighbors1;
+    neighbors[2] = neighbors2;
+    neighbors[3] = neighbors3;
+    neighbors[4] = neighbors4;
+    neighbors[5] = neighbors5;
+
+    vert[0] = vec2(0.0, 0.5);
+    vert[1] = vec2(0.25, 0.933);
+    vert[2] = vec2(0.75, 0.933);
+    vert[3] = vec2(1.0, 0.5);
+    vert[4] = vec2(0.75, 0.067);
+    vert[5] = vec2(0.25, 0.067);
+
+    float d3 = r_d / sin60;
+    float r = 0.5 - d3; // vobshe to 0.5 - d3 = 0.1766837, no prosto 0.5 - d3 ne rabotaet
+    //r = 0.1766837;
+    // centri skrugleniy
+    vertR[0] = vv + vec2(-r, 0.0);
+    vertR[1] = vv + vec2(-r * cos60, sin60 * r);
+    vertR[2] = vv + vec2(r * cos60, sin60 * r);
+    vertR[3] = vv + vec2(r, 0.0);
+    vertR[4] = vv + vec2(r * cos60, -sin60 * r);
+    vertR[5] = vv + vec2(-r * cos60, -sin60 * r);
+
+    float l = r_d * 0.5774; //(tg30)
+    // tochki nachala i konca skrugleniy na okrujnosti
+    vertRd[0] = vec2(vert[0].x + l * cos60, vert[0].y + l * sin60);
+    vertRd[1] = vec2(vert[0].x + l * cos60, vert[0].y - l * sin60);
+    vertRd[2] = vec2(vert[1].x + l, vert[1].y);
+    vertRd[3] = vec2(vert[1].x - l * cos60, vert[1].y - l * sin60);
+    vertRd[5] = vec2(vert[2].x - l, vert[2].y);
+    vertRd[4] = vec2(vert[2].x + l * cos60, vert[2].y - l * sin60);
+    vertRd[7] = vec2(vert[3].x - l * cos60, vert[3].y + l * sin60);
+    vertRd[6] = vec2(vert[3].x - l * cos60, vert[3].y - l * sin60);
+    vertRd[8] = vec2(vert[4].x - l, vert[4].y);
+    vertRd[9] = vec2(vert[4].x + l * cos60, vert[4].y + l * sin60);
+    vertRd[11] = vec2(vert[5].x + l, vert[5].y);
+    vertRd[10] = vec2(vert[5].x - l * cos60, vert[5].y + l * sin60);
+
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+    bool end = false;
+    bool do_it = false;
+    for(int i = 0; i < 6 && !do_it; i++) {
+        int j = i + 1;
+        if(j > 5)
+            j = 0;
+
+        do_it = is_in_tr(vert[i], vert[j], vv);
+    }
+    if(!do_it)
+        return;
+
+    int sum = 0;
+    for(int i = 0; i < 6; i++) {
+        sum += neighbors[i];
+    }
+    if(sum == 6) {
+        gl_FragColor = vec4(vec3(v_color), alpha);
+        return;
+    }
+
+    dist = 100.0;
+    bool rad = false;
+    int indx;
+    for(int i = 0; i < 6 && !end; i++) {
+        int j = i + 1;
+        if(j > 5)
+            j = 0;
+        int jj = i - 1;
+        if(jj < 0)
+            jj = 5;
+        int jjj = i + 2;
+        if(jjj > 5)
+            jjj -= 5;
+
+        dist = min(dist, dist_to_line(vert[i], vert[j]));
+
+        if(neighbors[i] == 1) {
+            if(is_in_tr(vert[i], vert[j], vv)) {
+                float aaa = 1.0;
+                vec2 vertR2, vertR2_2;
+
+                if(i == 3) {
+                    vertR2 = vertR[5] + vec2(sin60, cos60);
+                    vertR2_2 = vertR[2] + vec2(0.0, -1.0);
+                } else if(i == 0) {
+                    vertR2_2 = vertR[5] + vec2(0.0, 1.0);
+                    vertR2 = vertR[2] + vec2(-sin60, -cos60);
+                } else if(i == 4) {
+                    vertR2 = vertR[0] + vec2(sin60, -cos60);
+                    vertR2_2 = vertR[3] + vec2(-sin60, -cos60);
+                } else if(i == 1) {
+                    vertR2_2 = vertR[0] + vec2(sin60, cos60);
+                    vertR2 = vertR[3] + vec2(-sin60, cos60);
+                } else if(i == 2) {
+                    vertR2 = vertR[4] + vec2(0.0, 1.0);
+                    vertR2_2 = vertR[1] + vec2(sin60, -cos60);
+                } else if(i == 5) {
+                    vertR2_2 = vertR[4] + vec2(-sin60, cos60);
+                    vertR2 = vertR[1] + vec2(0.0, -1.0);
+                }
+
+                if(neighbors[jj] == 0) {
+                    dist = distance(v_texCoords, vertR2) - r_d;
+                    aaa =
+                         smoothstep(d1, d2, ddist1 - dist)
+                         +
+                         1.0 - smoothstep(d2, r_d - radius, ddist2 - dist);
+                }
+
+                if(neighbors[j] == 0) {
+                    dist = distance(v_texCoords, vertR2_2) - r_d;
+                    aaa *=
+                         smoothstep(d1, d2, ddist1 - dist)
+                         +
+                         1.0 - smoothstep(d2, r_d - radius, ddist2 - dist);
+                }
+                gl_FragColor = vec4(vec3(v_color) * aaa, alpha);
+                    //* smoothstep(0.0, smoothing, dist);
+                return;
+            }
+        }
+
+        // nado li skruglat
+        if(
+            ((neighbors[i] == 0) && (neighbors[jj] == 0) &&
+            (is_in_tr(vert[i], vertRd[i*2], vertR[i]) || is_in_tr(vertRd[i*2 + 1], vert[i], vertR[i])))) {
+            rad = true;
+            indx = i;
+
+            //gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+            //return;
+
+            break;
+        }
+    }
+
+    float dist2centr = distance(v_texCoords, vv);
+    if(rad) {
+        dist = r_d - distance(v_texCoords, vertR[indx]);
+    }
+
+    float aaa =
+         (1.0 - smoothstep(d1, d2, dist))
+          + smoothstep(d2, r_d - radius, dist);
+
+    gl_FragColor = vec4(vec3(v_color) * aaa, alpha)
+        * smoothstep(0.0, smoothing, dist);
+}

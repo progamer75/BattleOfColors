@@ -1,0 +1,75 @@
+
+mini.png
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+btn_long
+  rotate: false
+  xy: 1, 145
+  size: 270, 70
+  orig: 270, 70
+  offset: 0, 0
+  index: -1
+btn_long_on
+  rotate: false
+  xy: 1, 73
+  size: 270, 70
+  orig: 270, 70
+  offset: 0, 0
+  index: -1
+TableCell
+  rotate: false
+  xy: 273, 145
+  size: 270, 70
+  orig: 270, 70
+  offset: 0, 0
+  index: -1
+btn_blue
+  rotate: false
+  xy: 1, 1
+  size: 80, 70
+  orig: 80, 70
+  offset: 0, 0
+  index: -1
+btn_cyan
+  rotate: false
+  xy: 273, 73
+  size: 80, 70
+  orig: 80, 70
+  offset: 0, 0
+  index: -1
+btn_gray
+  rotate: false
+  xy: 545, 145
+  size: 80, 70
+  orig: 80, 70
+  offset: 0, 0
+  index: -1
+btn_green
+  rotate: false
+  xy: 83, 1
+  size: 80, 70
+  orig: 80, 70
+  offset: 0, 0
+  index: -1
+btn_magenta
+  rotate: false
+  xy: 355, 73
+  size: 80, 70
+  orig: 80, 70
+  offset: 0, 0
+  index: -1
+btn_red
+  rotate: false
+  xy: 627, 145
+  size: 80, 70
+  orig: 80, 70
+  offset: 0, 0
+  index: -1
+btn_yellow
+  rotate: false
+  xy: 165, 1
+  size: 80, 70
+  orig: 80, 70
+  offset: 0, 0
+  index: -1

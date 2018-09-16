@@ -1,0 +1,41 @@
+#ifdef GL_ES
+    precision mediump float;
+#endif
+
+varying vec4 v_color;
+varying vec2 v_texCoords;
+uniform sampler2D u_texture;
+uniform mat4 u_projTrans;
+//uniform float blurSize;
+float blurSize = 4.0/64.0;
+
+float pii = 3.14159265;
+float numBlurPixelsPerSide = 1.0;
+float sigma = 0.5;
+vec2 blurVec0 = vec2(1.0, 0.0);
+vec2 blurVec1 = vec2(0.0, 1.0);
+
+void main() {
+//		vec4 texColor = texture2D(u_texture, vec2(gl_TexCoord[0]));
+		//vec2 center = vec2(0.5f);
+		//float color = 1 - min(1,distance(center,v_texCoords)/0.6f);
+        //gl_FragColor = vec4(vec3(v_color * color), 1.0);
+        
+        
+  vec4 avgValue = vec4(0.0, 0.0, 0.0, 0.0);
+  avgValue += texture2D(u_texture, v_texCoords.xy);
+  float sum = 1.0;
+
+  for (float i = 1.0; i <= numBlurPixelsPerSide; i++) 
+  {
+         avgValue += texture2D(u_texture, v_texCoords.xy - i * blurSize * blurVec0)*sigma;
+         avgValue += texture2D(u_texture, v_texCoords.xy + i * blurSize * blurVec0)*sigma;
+         avgValue += texture2D(u_texture, v_texCoords.xy - i * blurSize * blurVec1)*sigma;
+         avgValue += texture2D(u_texture, v_texCoords.xy + i * blurSize * blurVec1)*sigma;
+         sum += 4.0*sigma;
+   }
+
+   gl_FragColor = avgValue / sum * v_color;
+   gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+

@@ -1,0 +1,15 @@
+#ifdef GL_ES
+    precision mediump float;
+#endif
+
+varying vec4 v_color;
+varying vec2 v_texCoords;
+
+uniform mat4 u_projTrans;
+
+float pii = 3.14159265;
+
+void main() {
+    gl_FragColor = v_color * (1.0-smoothstep(0.0, 0.3, distance(v_texCoords, vec2(0.5, 0.5))));
+}
+

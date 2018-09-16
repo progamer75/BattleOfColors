@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Google Play game services IDs.
+Save this file as res/values/games-ids.xml in your project.
+-->
+<resources>
+  <string name="app_id">332115816332</string>
+  <string name="package_name">com.BattleOfColors.game.android</string>
+  <string name="achievement_10_wins_in_all_games">CgkIjN-UndUJEAIQFQ</string>
+  <string name="leaderboard_2_players_5_colors">CgkIjN-UndUJEAIQAQ</string>
+  <string name="leaderboard_2_players_6_colors">CgkIjN-UndUJEAIQAg</string>
+  <string name="leaderboard_2_players_7_colors">CgkIjN-UndUJEAIQAw</string>
+  <string name="leaderboard_4_players_6_colors">CgkIjN-UndUJEAIQBA</string>
+  <string name="leaderboard_4_players_7_colors">CgkIjN-UndUJEAIQFA</string>
+  <string name="event_2_players_5_colors__wins">CgkIjN-UndUJEAIQBQ</string>
+  <string name="event_2_players_5_colors__losses">CgkIjN-UndUJEAIQBg</string>
+  <string name="event_2_players_6_colors__wins">CgkIjN-UndUJEAIQCA</string>
+  <string name="event_2_players_6_colors__losses">CgkIjN-UndUJEAIQCQ</string>
+  <string name="event_2_players_7_colors__wins">CgkIjN-UndUJEAIQCw</string>
+  <string name="event_2_players_7_colors__losses">CgkIjN-UndUJEAIQDA</string>
+  <string name="event_4_players_6_colors__wins">CgkIjN-UndUJEAIQDg</string>
+  <string name="event_4_players_6_colors__losses">CgkIjN-UndUJEAIQDw</string>
+  <string name="event_4_players_7_colors__wins">CgkIjN-UndUJEAIQEQ</string>
+  <string name="event_4_players_7_colors__losses">CgkIjN-UndUJEAIQEg</string>
+</resources>
